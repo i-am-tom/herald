@@ -1,0 +1,25 @@
+cabal-version: 3.4
+name: herald
+version: 0.1.0.0
+license: MIT
+license-file: LICENSE
+author: Tom Harding
+maintainer: i.am.tom.harding@gmail.com
+category: Data
+build-type: Simple
+
+library
+  build-depends:
+    , aeson
+    , base
+    , containers
+    , free
+    , mtl
+    , scientific
+    , text
+    , vector
+  default-language: GHC2021
+  exposed-modules:
+    Herald.Schema
+  ghc-options: -Wall -Wextra -Wunused-packages
+  hs-source-dirs: source
