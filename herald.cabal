@@ -23,3 +23,27 @@ library
     Herald.Schema
   ghc-options: -Wall -Wextra -Wunused-packages
   hs-source-dirs: source
+
+test-suite herald
+  build-depends:
+    , aeson
+    , base
+    , containers
+    , hspec
+    , scientific
+    , tasty
+    , tasty-hspec
+    , text
+    , vector
+  build-tool-depends:
+   tasty-discover:tasty-discover
+  default-language: GHC2021
+  ghc-options: -Wall -Wextra
+  hs-source-dirs:
+    source
+    tests
+  main-is: Driver.hs
+  other-modules:
+    Herald.Schema
+    Herald.SchemaTest
+  type: exitcode-stdio-1.0
