@@ -13,8 +13,6 @@ library
     , aeson
     , base
     , containers
-    , free
-    , mtl
     , scientific
     , text
     , vector
