@@ -14,7 +14,6 @@ common libraries
     , base
     , containers
     , free
-    , mtl
     , lens
     , scientific
     , openapi3
