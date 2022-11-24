@@ -8,31 +8,34 @@ maintainer: i.am.tom.harding@gmail.com
 category: Data
 build-type: Simple
 
-library
+common libraries
   build-depends:
     , aeson
     , base
     , containers
+    , free
+    , mtl
+    , lens
     , scientific
+    , openapi3
     , text
     , vector
+
+library
+  import: libraries
   default-language: GHC2021
   exposed-modules:
     Herald.Schema
+    Herald.OpenAPI
   ghc-options: -Wall -Wextra -Wunused-packages
   hs-source-dirs: source
 
 test-suite herald
+  import: libraries
   build-depends:
-    , aeson
-    , base
-    , containers
     , hspec
-    , scientific
     , tasty
     , tasty-hspec
-    , text
-    , vector
   build-tool-depends:
    tasty-discover:tasty-discover
   default-language: GHC2021
@@ -42,6 +45,8 @@ test-suite herald
     tests
   main-is: Driver.hs
   other-modules:
+    Herald.OpenAPI
+    Herald.OpenAPITest
     Herald.Schema
     Herald.SchemaTest
   type: exitcode-stdio-1.0
