@@ -20,10 +20,10 @@ import GHC.Exts (fromList)
 import Herald.Schema (Expr, Schema)
 import Herald.Schema qualified as Schema
 
-document ∷ Schema Alt x → OA.Schema
+document ∷ Schema x → OA.Schema
 document structure = go structure mempty
   where
-    go ∷ Schema Alt x → OA.Schema → OA.Schema
+    go ∷ Schema x → OA.Schema → OA.Schema
     go structure' acc = case structure' of
       Schema.Nullable s → go       s acc & OA.nullable ?~ True
       Schema.Array    s → branches s acc & OA.type_    ?~ OA.OpenApiArray
@@ -32,13 +32,13 @@ document structure = go structure mempty
       Schema.Object   s → branches s acc & OA.type_    ?~ OA.OpenApiObject
       Schema.String   s → branches s acc & OA.type_    ?~ OA.OpenApiString
 
-    branches ∷ ∀ s i o. Document i ⇒ Expr Alt s i o → OA.Schema → OA.Schema
+    branches ∷ ∀ s i o. Document i ⇒ Expr s i o → OA.Schema → OA.Schema
     branches = \case
       Alt [     ] → id
       Alt [choix] → unwrap choix
       Alt choices → OA.oneOf ?~ [ OA.Inline (unwrap c mempty) | c ← choices ]
 
-    unwrap ∷ ∀ s i o. Document i ⇒ AltF (Schema.ExprF Alt s i) o → OA.Schema → OA.Schema
+    unwrap ∷ ∀ s i o. Document i ⇒ AltF (Schema.ExprF s i) o → OA.Schema → OA.Schema
     unwrap = \case
       Pure _ → id
       Ap x f → branches f . expr x
@@ -46,7 +46,7 @@ document structure = go structure mempty
     rejected ∷ ∀ i. Document i ⇒ Set i → OA.Referenced OA.Schema
     rejected = OA.Inline . flip expr mempty . Schema.Allow . Map.fromSet \_ → ()
 
-    expr ∷ ∀ s i o. Document i ⇒ Schema.ExprF Alt s i o → OA.Schema → OA.Schema
+    expr ∷ ∀ s i o. Document i ⇒ Schema.ExprF s i o → OA.Schema → OA.Schema
     expr = \case
       Schema.Allow       values → OA.enum_       ?~ map toJSON (Map.keys values)
       Schema.Forbid      values → OA.not_        ?~ rejected values
@@ -59,7 +59,7 @@ document structure = go structure mempty
 
 type Document ∷ Type → Constraint
 class ToJSON input ⇒ Document input where
-  typed_ ∷ ∀ x. Schema.Command Alt input x → OA.Schema → OA.Schema
+  typed_ ∷ ∀ x. Schema.Command input x → OA.Schema → OA.Schema
 
 instance Document Bool where
   typed_ = \case
