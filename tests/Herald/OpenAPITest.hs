@@ -6,7 +6,6 @@
 
 module Herald.OpenAPITest where
 
-import Control.Alternative.Free (Alt)
 import Data.Aeson ((.=), toJSON)
 import Data.Aeson qualified as JSON
 import Data.Set qualified as Set
@@ -91,7 +90,7 @@ spec_examples = do
           ]
 
     it "enumerated" do
-      let model ∷ Schema Alt ()
+      let model ∷ Schema ()
           model = object $ allow
             [ ( [ "foo" .= JSON.String "one"
                 , "bar" .= JSON.String "two"

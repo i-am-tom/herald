@@ -18,186 +18,186 @@ import Data.Vector (Vector)
 import Numeric.Natural (Natural)
 import Data.Int (Int32, Int64)
 
-type Schema ∷ ((Type → Type) → (Type → Type)) → (Type → Type)
-data Schema f x where
-  Nullable ∷ Schema f x → Schema f (Maybe x)
+type Schema ∷ Type → Type
+data Schema x where
+  Nullable ∷ Schema x → Schema (Maybe x)
 
-  Array ∷ Expr f switch Array x → Schema f x
-  Boolean ∷ Expr f switch Bool x → Schema f x
-  Number ∷ Expr f switch Scientific x → Schema f x
-  Object ∷ Expr f switch Object x → Schema f x
-  String ∷ Expr f switch Text x → Schema f x
+  Array ∷ Expr switch Array x → Schema x
+  Boolean ∷ Expr switch Bool x → Schema x
+  Number ∷ Expr switch Scientific x → Schema x
+  Object ∷ Expr switch Object x → Schema x
+  String ∷ Expr switch Text x → Schema x
 
-nullable ∷ ∀ f x. Schema f x → Schema f (Maybe x)
+nullable ∷ ∀ x. Schema x → Schema (Maybe x)
 nullable = Nullable
 
-array ∷ ∀ f s x. Expr f s Array x → Schema f x
+array ∷ ∀ s x. Expr s Array x → Schema x
 array = Array
 
-boolean ∷ ∀ f s x. Expr f s Bool x → Schema f x
+boolean ∷ ∀ s x. Expr s Bool x → Schema x
 boolean = Boolean
 
-number ∷ ∀ f s x. Expr f s Scientific x → Schema f x
+number ∷ ∀ s x. Expr s Scientific x → Schema x
 number = Number
 
-object ∷ ∀ f s x. Expr f s Object x → Schema f x
+object ∷ ∀ s x. Expr s Object x → Schema x
 object = Object
 
-string ∷ ∀ f s x. Expr f s Text x → Schema f x
+string ∷ ∀ s x. Expr s Text x → Schema x
 string = String
 
-type Expr ∷ ((Type → Type) → (Type → Type)) → Switch → Type → Type → Type
-type Expr f switch input = f (ExprF f switch input)
+type Expr ∷ Switch → Type → Type → Type
+type Expr switch input = Alt (ExprF switch input)
 
 type Switch ∷ Type
 data Switch = Enumerate | Constrain
 
-type ExprF ∷ ((Type → Type) → (Type → Type)) → Switch → Type → Type → Type
-data ExprF f switch input output where
-  Command ∷ Command f input output → ExprF f 'Constrain input output
-  Deprecated ∷ ExprF f switch input ()
-  Description ∷ Text → ExprF f switch input ()
-  Example ∷ input → ExprF f switch input ()
-  Allow ∷ Map input output → ExprF f 'Enumerate input output
-  Forbid ∷ Set input → ExprF f 'Constrain input ()
-  Title ∷ Text → ExprF f switch input ()
-  Value ∷ ExprF f switch input input
+type ExprF ∷ Switch → Type → Type → Type
+data ExprF switch input output where
+  Command ∷ Command input output → ExprF 'Constrain input output
+  Deprecated ∷ ExprF switch input ()
+  Description ∷ Text → ExprF switch input ()
+  Example ∷ input → ExprF switch input ()
+  Allow ∷ Map input output → ExprF 'Enumerate input output
+  Forbid ∷ Set input → ExprF 'Constrain input ()
+  Title ∷ Text → ExprF switch input ()
+  Value ∷ ExprF switch input input
 
-allow ∷ ∀ i o. Map i o → Expr Alt 'Enumerate i o
+allow ∷ ∀ i o. Map i o → Expr 'Enumerate i o
 allow = liftAlt . Allow
 
-forbid ∷ ∀ i. Set i → Expr Alt 'Constrain i ()
+forbid ∷ ∀ i. Set i → Expr 'Constrain i ()
 forbid = liftAlt . Forbid
 
-command ∷ ∀ i o. Command Alt i o → Expr Alt 'Constrain i o
+command ∷ ∀ i o. Command i o → Expr 'Constrain i o
 command = liftAlt . Command
 
-deprecated ∷ ∀ s i. Expr Alt s i ()
+deprecated ∷ ∀ s i. Expr s i ()
 deprecated = liftAlt Deprecated
 
-description ∷ ∀ s i. Text → Expr Alt s i ()
+description ∷ ∀ s i. Text → Expr s i ()
 description = liftAlt . Description
 
-example ∷ ∀ s i. i → Expr Alt s i ()
+example ∷ ∀ s i. i → Expr s i ()
 example = liftAlt . Example
 
-title ∷ ∀ s i. Text → Expr Alt s i ()
+title ∷ ∀ s i. Text → Expr s i ()
 title = liftAlt . Title
 
-value ∷ ∀ s i. Expr Alt s i i
+value ∷ ∀ s i. Expr s i i
 value = liftAlt Value
 
-type Command ∷ ((Type → Type) → (Type → Type)) → Type → Type → Type
-data family Command f input
+type Command ∷ Type → Type → Type
+data family Command input
 
-data instance Command f Array x where
-  Items ∷ Schema f x → Command f Array (Vector x)
-  MaxItems ∷ Natural → Command f Array ()
-  MinItems ∷ Natural → Command f Array ()
-  UniqueItems ∷ Command f Array ()
+data instance Command Array x where
+  Items ∷ Schema x → Command Array (Vector x)
+  MaxItems ∷ Natural → Command Array ()
+  MinItems ∷ Natural → Command Array ()
+  UniqueItems ∷ Command Array ()
 
-items ∷ ∀ x. Schema Alt x → Expr Alt 'Constrain Array (Vector x)
+items ∷ ∀ x. Schema x → Expr 'Constrain Array (Vector x)
 items = command . Items
 
-maxItems ∷ Natural → Expr Alt 'Constrain Array ()
+maxItems ∷ Natural → Expr 'Constrain Array ()
 maxItems = command . MaxItems
 
-minItems ∷ Natural → Expr Alt 'Constrain Array ()
+minItems ∷ Natural → Expr 'Constrain Array ()
 minItems = command . MinItems
 
-uniqueItems ∷ Expr Alt 'Constrain Array ()
+uniqueItems ∷ Expr 'Constrain Array ()
 uniqueItems = command UniqueItems
 
-data instance Command f Bool _
+data instance Command Bool _
 
-data instance Command f Scientific x where
-  Double ∷ Command f Scientific Double
-  Float ∷ Command f Scientific Float
-  Int32 ∷ Command f Scientific Int32
-  Int64 ∷ Command f Scientific Int64
-  Integer ∷ (Bounded i, Integral i) ⇒ Command f Scientific i
-  ExclusiveMaximum ∷ Command f Scientific ()
-  ExclusiveMinimum ∷ Command f Scientific ()
-  Maximum ∷ Scientific → Command f Scientific ()
-  Minimum ∷ Scientific → Command f Scientific ()
-  MultipleOf ∷ Scientific → Command f Scientific ()
+data instance Command Scientific x where
+  Double ∷ Command Scientific Double
+  Float ∷ Command Scientific Float
+  Int32 ∷ Command Scientific Int32
+  Int64 ∷ Command Scientific Int64
+  Integer ∷ (Bounded i, Integral i) ⇒ Command Scientific i
+  ExclusiveMaximum ∷ Command Scientific ()
+  ExclusiveMinimum ∷ Command Scientific ()
+  Maximum ∷ Scientific → Command Scientific ()
+  Minimum ∷ Scientific → Command Scientific ()
+  MultipleOf ∷ Scientific → Command Scientific ()
 
-double ∷ Expr Alt 'Constrain Scientific Double
+double ∷ Expr 'Constrain Scientific Double
 double = command Double
 
-float ∷ Expr Alt 'Constrain Scientific Float
+float ∷ Expr 'Constrain Scientific Float
 float = command Float
 
-int32 ∷ Expr Alt 'Constrain Scientific Int32
+int32 ∷ Expr 'Constrain Scientific Int32
 int32 = command Int32
 
-int64 ∷ Expr Alt 'Constrain Scientific Int64
+int64 ∷ Expr 'Constrain Scientific Int64
 int64 = command Int64
 
-integer ∷ ∀ i. (Bounded i, Integral i) ⇒ Expr Alt 'Constrain Scientific i
+integer ∷ ∀ i. (Bounded i, Integral i) ⇒ Expr 'Constrain Scientific i
 integer = command Integer
 
-exclusiveMaximum ∷ Expr Alt 'Constrain Scientific ()
+exclusiveMaximum ∷ Expr 'Constrain Scientific ()
 exclusiveMaximum = command ExclusiveMaximum
 
-exclusiveMinimum ∷ Expr Alt 'Constrain Scientific ()
+exclusiveMinimum ∷ Expr 'Constrain Scientific ()
 exclusiveMinimum = command ExclusiveMinimum
 
-maximum ∷ Scientific → Expr Alt 'Constrain Scientific ()
+maximum ∷ Scientific → Expr 'Constrain Scientific ()
 maximum = command . Maximum
 
-minimum ∷ Scientific → Expr Alt 'Constrain Scientific ()
+minimum ∷ Scientific → Expr 'Constrain Scientific ()
 minimum = command . Minimum
 
-multipleOf ∷ Scientific → Expr Alt 'Constrain Scientific ()
+multipleOf ∷ Scientific → Expr 'Constrain Scientific ()
 multipleOf = command . MultipleOf
 
-data instance Command f Object x where
-  Required ∷ Text → Schema f x → Command f Object x
-  Optional ∷ Text → Schema f x → Command f Object (Maybe x)
-  ReadOnly ∷ Command f Object ()
-  WriteOnly ∷ Command f Object ()
-  MaxProperties ∷ Natural → Command f Object ()
-  MinProperties ∷ Natural → Command f Object ()
-  AdditionalProperties ∷ Maybe (Schema f x) → Command f Object (KeyMap x)
+data instance Command Object x where
+  Required ∷ Text → Schema x → Command Object x
+  Optional ∷ Text → Schema x → Command Object (Maybe x)
+  ReadOnly ∷ Command Object ()
+  WriteOnly ∷ Command Object ()
+  MaxProperties ∷ Natural → Command Object ()
+  MinProperties ∷ Natural → Command Object ()
+  AdditionalProperties ∷ Maybe (Schema x) → Command Object (KeyMap x)
 
-required ∷ ∀ x. Text → Schema Alt x → Expr Alt 'Constrain Object x
+required ∷ ∀ x. Text → Schema x → Expr 'Constrain Object x
 required key = command . Required key
 
-optional ∷ ∀ x. Text → Schema Alt x → Expr Alt 'Constrain Object (Maybe x)
+optional ∷ ∀ x. Text → Schema x → Expr 'Constrain Object (Maybe x)
 optional key = command . Optional key
 
-readOnly ∷ Expr Alt 'Constrain Object ()
+readOnly ∷ Expr 'Constrain Object ()
 readOnly = command ReadOnly
 
-writeOnly ∷ Expr Alt 'Constrain Object ()
+writeOnly ∷ Expr 'Constrain Object ()
 writeOnly = command WriteOnly
 
-maxProperties ∷ Natural → Expr Alt 'Constrain Object ()
+maxProperties ∷ Natural → Expr 'Constrain Object ()
 maxProperties = command . MaxProperties
 
-minProperties ∷ Natural → Expr Alt 'Constrain Object ()
+minProperties ∷ Natural → Expr 'Constrain Object ()
 minProperties = command . MinProperties
 
-additionalProperties ∷ ∀ x. Maybe (Schema Alt x) → Expr Alt 'Constrain Object (KeyMap x)
+additionalProperties ∷ ∀ x. Maybe (Schema x) → Expr 'Constrain Object (KeyMap x)
 additionalProperties = command . AdditionalProperties
 
-data instance Command f Text x where
-  MaxLength ∷ Natural → Command f Text ()
-  MinLength ∷ Natural → Command f Text ()
-  Format ∷ Format → Command f Text ()
-  Pattern ∷ String → Command f Text ()
+data instance Command Text x where
+  MaxLength ∷ Natural → Command Text ()
+  MinLength ∷ Natural → Command Text ()
+  Format ∷ Format → Command Text ()
+  Pattern ∷ String → Command Text ()
 
-maxLength ∷ Natural → Expr Alt 'Constrain Text ()
+maxLength ∷ Natural → Expr 'Constrain Text ()
 maxLength = command . MaxLength
 
-minLength ∷ Natural → Expr Alt 'Constrain Text ()
+minLength ∷ Natural → Expr 'Constrain Text ()
 minLength = command . MinLength
 
-format ∷ Format → Expr Alt 'Constrain Text ()
+format ∷ Format → Expr 'Constrain Text ()
 format = command . Format
 
-pattern ∷ String → Expr Alt 'Constrain Text ()
+pattern ∷ String → Expr 'Constrain Text ()
 pattern = command . Pattern
 
 type Format ∷ Type
