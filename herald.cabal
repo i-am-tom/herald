@@ -15,6 +15,7 @@ common libraries
     , containers
     , free
     , lens
+    , mtl
     , scientific
     , openapi3
     , text
@@ -24,6 +25,8 @@ library
   import: libraries
   default-language: GHC2021
   exposed-modules:
+    Control.Applicative.Free.Extra
+
     Herald.Schema
     Herald.OpenAPI
   ghc-options: -Wall -Wextra -Wunused-packages
@@ -44,6 +47,8 @@ test-suite herald
     tests
   main-is: Driver.hs
   other-modules:
+    Control.Applicative.Free.Extra
+
     Herald.OpenAPI
     Herald.OpenAPITest
     Herald.Schema
