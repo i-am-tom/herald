@@ -24,6 +24,8 @@ library
   import: libraries
   default-language: GHC2021
   exposed-modules:
+    Data.Aeson.KeyMap.Extended
+
     Herald.Schema
     Herald.OpenAPI
   ghc-options: -Wall -Wextra -Wunused-packages
