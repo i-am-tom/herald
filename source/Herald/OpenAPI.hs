@@ -32,13 +32,13 @@ document structure = go structure mempty
       Schema.Object   s → branches s acc & OA.type_    ?~ OA.OpenApiObject
       Schema.String   s → branches s acc & OA.type_    ?~ OA.OpenApiString
 
-    branches ∷ ∀ s i o. Document i ⇒ Expr s i o → OA.Schema → OA.Schema
+    branches ∷ ∀ i o. Document i ⇒ Expr i o → OA.Schema → OA.Schema
     branches = \case
       Alt [     ] → id
       Alt [choix] → unwrap choix
       Alt choices → OA.oneOf ?~ [ OA.Inline (unwrap c mempty) | c ← choices ]
 
-    unwrap ∷ ∀ s i o. Document i ⇒ AltF (Schema.ExprF s i) o → OA.Schema → OA.Schema
+    unwrap ∷ ∀ i o. Document i ⇒ AltF (Schema.ExprF i) o → OA.Schema → OA.Schema
     unwrap = \case
       Pure _ → id
       Ap x f → branches f . expr x
@@ -46,7 +46,7 @@ document structure = go structure mempty
     rejected ∷ ∀ i. Document i ⇒ Set i → OA.Referenced OA.Schema
     rejected = OA.Inline . flip expr mempty . Schema.Allow . Map.fromSet \_ → ()
 
-    expr ∷ ∀ s i o. Document i ⇒ Schema.ExprF s i o → OA.Schema → OA.Schema
+    expr ∷ ∀ i o. Document i ⇒ Schema.ExprF i o → OA.Schema → OA.Schema
     expr = \case
       Schema.Allow       values → OA.enum_       ?~ map toJSON (Map.keys values)
       Schema.Forbid      values → OA.not_        ?~ rejected values
@@ -79,11 +79,12 @@ instance Document Scientific where
     Schema.ExclusiveMinimum        → OA.exclusiveMinimum ?~ True
     Schema.MultipleOf       factor → OA.multipleOf       ?~ factor
 
-    Schema.Double  → \x → x & OA.type_ ?~ OA.OpenApiNumber  & OA.format ?~ "double"
-    Schema.Float   → \x → x & OA.type_ ?~ OA.OpenApiNumber  & OA.format ?~ "float"
-    Schema.Int32   → \x → x & OA.type_ ?~ OA.OpenApiInteger & OA.format ?~ "int32"
-    Schema.Int64   → \x → x & OA.type_ ?~ OA.OpenApiInteger & OA.format ?~ "int64"
-    Schema.Integer → \x → x & OA.type_ ?~ OA.OpenApiInteger
+    Schema.Double   → OA.format ?~ "double"
+    Schema.Float    → OA.format ?~ "float"
+    Schema.Floating → OA.type_ ?~ OA.OpenApiNumber
+    Schema.Int32    → OA.format ?~ "int32"
+    Schema.Int64    → OA.format ?~ "int64"
+    Schema.Integer  → OA.type_ ?~ OA.OpenApiInteger
 
 instance Document Object where
   typed_ = \case
