@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UnicodeSyntax #-}
@@ -201,6 +202,7 @@ pattern = command . Pattern
 
 type Format ∷ Type
 data Format = Date | DateTime | Password | Byte | Binary | Custom Text
+  deriving stock (Eq, Ord, Show)
 
 date ∷ Format
 date = Date
