@@ -14,7 +14,10 @@ common libraries
     , base
     , containers
     , free
+    , generic-lens
+    , generic-monoid
     , lens
+    , lens-aeson
     , mtl
     , scientific
     , openapi3
@@ -29,6 +32,7 @@ library
 
     Herald.Schema
     Herald.OpenAPI
+    Herald.Summary
   ghc-options: -Wall -Wextra -Wunused-packages
   hs-source-dirs: source
 
@@ -53,4 +57,6 @@ test-suite herald
     Herald.OpenAPITest
     Herald.Schema
     Herald.SchemaTest
+    Herald.Summary
+    Herald.SummaryTest
   type: exitcode-stdio-1.0
